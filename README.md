@@ -1,6 +1,12 @@
 <h2 align="center">
   𝑱𝒂𝒑𝒂𝒏𝒆𝒔𝒆 𝑿 𝑹𝒂𝒏𝒌𝒊𝒏𝒈
-</h2><p align="center">
+</h2>
+
+<p align="center">
+  <img src="https://github.com/TeamJapanese/Japanese-X-Ranking/blob/main/img/ranking.png" width="700"/>
+</p>
+
+<p align="center">
 <b>
 ᴀ ʀᴇᴀʟ-ᴛɪᴍᴇ ᴛʏᴘɪɴɢ ᴄᴏᴍᴘᴇᴛɪᴛɪᴏɴ ᴇɴɢɪɴᴇ  •  
 ʙᴜɪʟᴛ ꜰᴏʀ ʜɪɢʜ-ᴘᴇʀꜰᴏʀᴍᴀɴᴄᴇ ɢʀᴏᴜᴘs  •  
