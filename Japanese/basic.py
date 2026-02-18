@@ -244,7 +244,32 @@ async def send_challenge(client: Client):
 
 
 
+@Client.on_message(filters.command("repo"))
+async def repo_handler(client: Client, message: Message):
+    repo_text = f"""
+━━━━━━━━━━━━━━━━━━━
+**[𝑱𝒂𝒑𝒂𝒏𝒆𝒔𝒆 𝑿 𝑹𝒂𝒏𝒌𝒊𝒏𝒈]({BOT_LINK})**
+**ʀᴇᴘᴏꜱɪᴛᴏʀʏ:** ᴏᴘᴇɴ-sᴏᴜʀᴄᴇ
+**ꜱᴛᴀᴛᴜꜱ:** ᴀᴄᴛɪᴠᴇʟʏ ᴍᴀɪɴᴛᴀɪɴᴇᴅ
+**ꜱᴄᴏᴘᴇ:** ᴘʀᴏᴅᴜᴄᴛɪᴏɴ-ʀᴇᴀᴅʏ ᴄᴏᴅᴇʙᴀꜱᴇ
+**ᴅᴏᴄᴜᴍᴇɴᴛᴀᴛɪᴏɴ:** ᴄʟᴇᴀʀ & ᴡᴇʟʟ sᴛʀᴜᴄᴛᴜʀᴇᴅ
+━━━━━━━━━━━━━━━━━━━
+**ᴍᴀɪɴᴛᴀɪɴᴇʀ:** [ᴛᴇᴧᴍ ᴊᴧᴘᴧɴᴇsᴇ]({TEAM_LINK})
+"""
 
+    buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton(
+            "ᴠɪᴇᴡ ɢɪᴛʜᴜʙ ʀᴇᴘᴏꜱɪᴛᴏʀʏ",
+            url="https://github.com/TeamJapanese/Japanese-X-Ranking"
+        )]
+    ])
+
+    await message.reply_text(
+        repo_text,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=buttons,
+        disable_web_page_preview=True
+    )
 
 
 
