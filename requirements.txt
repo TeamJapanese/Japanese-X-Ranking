@@ -1,7 +1,7 @@
 pyrogram>=2.0.0
 tgcrypto>=1.2.0
 pymongo>=4.3.0
-dnspython>=2.3.0
+dnspython>=2.8.0
 python-dotenv>=1.0.0
 flask>=2.3.0
 flask-restful>=0.3.0
