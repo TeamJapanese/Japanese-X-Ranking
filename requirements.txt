@@ -9,5 +9,5 @@ requests>=2.31.0
 pytz>=2023.3
 psutil>=5.9.5
 motor>=3.1.1
-Pillow>=10.0.0
+Pillow>=12.2.0
 pytz
