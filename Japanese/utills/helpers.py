@@ -33,39 +33,30 @@ from Japanese.utils.constants import (
 # ===== BASE DIR =====
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# ===== IMAGE =====
-BASE_IMAGE = os.path.join(BASE_DIR, "..", "..", "img", "japanese.png")
+# ===== IMAGE FOLDER =====
+IMG_DIR = os.path.join(BASE_DIR, "..", "..", "img")
 
 # ===== FONT =====
 FONT_PATH = os.path.join(BASE_DIR, "..", "..", "font", "Roboto-Regular.ttf")
 
 # ===== WORD LIST =====
 WORDS_POOL = [
-    # 🔹 Very short (3–4 letters) – ultra fast rounds
     "WIN", "RUN", "GO", "TRY", "DO",
     "UP", "NOW", "MOVE", "PLAY", "FAST",
     "REAL", "TRUE", "SAFE", "NEXT",
-
-    # 🔹 Short (5–6 letters) – balanced speed
     "POWER", "SMILE", "PEACE", "TRUST", "LIGHT",
     "HEART", "FOCUS", "BRAVE", "CALM", "LEVEL",
     "START", "RISE", "BUILD", "LEARN", "GROW",
     "BOOST", "ENERGY", "CONTROL",
-
-    # 🔹 Medium (7–8 letters) – skill based
     "SUCCESS", "RESPECT", "FUTURE", "PROGRESS",
     "VICTORY", "ACHIEVE", "BELIEVE", "BALANCE",
     "CONFIDENT", "COURAGE", "STABILITY",
     "POWERFUL", "MOTIVATE",
-
-    # 🔹 Long (9–12 letters) – high difficulty rounds
     "DISCIPLINE", "PATIENCE", "DETERMINED",
     "CONSISTENT", "FOCUSEDMIND",
     "SELFCONTROL", "PERFORMANCE",
     "TRANSFORM", "DEDICATION",
     "ACHIEVEMENT", "COMMITMENT",
-
-    # 🔹 Bonus motivational words (fun & rewarding)
     "DOMINATE", "UNSTOPPABLE", "LEGENDARY",
     "CHAMPION", "MASTER", "ELITE",
     "MAXIMUM", "UPGRADE"
@@ -75,14 +66,22 @@ def generate_challenge_image(word: str = None) -> BytesIO:
     if word is None:
         word = random.choice(WORDS_POOL)
 
-    # ===== LOAD IMAGE =====
-    if not os.path.exists(BASE_IMAGE):
-        raise FileNotFoundError(f"Background image not found: {BASE_IMAGE}")
+    # ===== RANDOM BACKGROUND IMAGE =====
+    images = [
+        f for f in os.listdir(IMG_DIR)
+        if f.startswith("japanese") and f.endswith(".png")
+    ]
+
+    if not images:
+        raise FileNotFoundError("No japanese*.png images found in img folder.")
+
+    BASE_IMAGE = os.path.join(IMG_DIR, random.choice(images))
+
     img = Image.open(BASE_IMAGE).convert("RGBA")
     draw = ImageDraw.Draw(img)
     W, H = img.size
 
-    # ===== LOAD FONT SAFELY =====
+    # ===== LOAD FONT =====
     font_size = 80
     try:
         if os.path.exists(FONT_PATH):
@@ -91,7 +90,7 @@ def generate_challenge_image(word: str = None) -> BytesIO:
             raise OSError
     except OSError:
         font = ImageFont.load_default()
-        print(f"⚠️ WARNING: Custom font missing, using default font")
+        print("⚠️ WARNING: Custom font missing, using default font")
 
     # ===== TEXT SIZE =====
     bbox = font.getbbox(word)
@@ -101,14 +100,14 @@ def generate_challenge_image(word: str = None) -> BytesIO:
     y = (H - th) // 2
 
     # ===== DRAW TEXT =====
-    draw.text((x+3, y+3), word, font=font, fill=(0,0,0,180))
+    draw.text((x + 3, y + 3), word, font=font, fill=(0, 0, 0, 180))
     draw.text(
         (x, y),
         word,
         font=font,
-        fill=(255,255,255,255),
+        fill=(255, 255, 255, 255),
         stroke_width=5,
-        stroke_fill=(0,0,0)
+        stroke_fill=(0, 0, 0),
     )
 
     # ===== OUTPUT =====
@@ -117,6 +116,7 @@ def generate_challenge_image(word: str = None) -> BytesIO:
     img.save(output, format="PNG")
     output.seek(0)
     return output
+
 
 def generate_reward() -> int:
     return random.randint(REWARD_MIN, REWARD_MAX)
