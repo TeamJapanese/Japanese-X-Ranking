@@ -1,7 +1,7 @@
 pyrogram>=2.0.106
 tgcrypto>=1.2.0
 
-pymongo>=4.17.0
+pymongo>=4.18.2
 pyrogram>=2.0.0
 tgcrypto>=1.2.5
 pymongo>=4.3.0
