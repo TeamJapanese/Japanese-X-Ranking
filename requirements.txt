@@ -7,7 +7,7 @@ tgcrypto>=1.2.5
 pymongo>=4.3.0
 
 
-dnspython>=2.3.0
+dnspython>=2.9.0
 python-dotenv>=1.2.2
 flask>=2.3.0
 
