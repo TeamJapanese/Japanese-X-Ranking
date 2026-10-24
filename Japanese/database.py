@@ -20,6 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
+
+
 import os
 from pymongo import MongoClient
 
@@ -27,7 +29,7 @@ from pymongo import MongoClient
 
 MONGO_URL = os.environ.get("MONGO_URL")
 mongo = MongoClient(MONGO_URL)
-db = mongo["JapaneseXRanking"]
+db = mongo["TeamJapanese"]
 
 users_col = db["users"]
 groups_col = db["groups"]
@@ -168,8 +170,8 @@ def get_all_group_ids():
     
 # Japanese/database/helpers.py
 
-def get_users_count(users_col):
+def get_users_count():
     return users_col.count_documents({})
 
-def get_groups_count(groups_col):
+def get_groups_count():
     return groups_col.count_documents({})
