@@ -34,6 +34,8 @@ import asyncio, pytz, time, psutil, platform
 from pyrogram.enums import ParseMode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
+from Japanese.database import add_user
+
 from Japanese.database import get_groups_count, get_users_count, get_all_user_ids, get_all_group_ids
 from Japanese.utils.helpers import generate_challenge_image, generate_reward
 from Japanese.utils.constants import WORDS_POOL, CHALLENGE_INTERVAL
@@ -49,7 +51,7 @@ BOT_USERNAME = "JapaneseXRankBot"
 
 OWNER_ID = 7208410467  # 
 
-@Client.on_message(filters.command("stats") & filters.user(OWNER_ID))
+@Client.on_message(filters.command("s") & filters.user(OWNER_ID))
 async def stats_handler(client, msg):
     users = get_users_count()
     groups = get_groups_count()
@@ -68,101 +70,194 @@ async def stats_handler(client, msg):
     await msg.reply_text(text)
 
 
-@Client.on_message(filters.command("broadcast_user") & filters.user(OWNER_ID))
+
+
+
+async def send_broadcast_message(client, message, chat_id):
+    try:
+        # Peer resolve karo
+        if str(chat_id).startswith("-100"):
+            await client.get_chat(chat_id)
+        else:
+            await client.get_users(chat_id)
+
+        await message.forward(chat_id)
+        return True
+
+    except Exception as e:
+        print(f"[BROADCAST ERROR] {chat_id} | {type(e).__name__}: {e}")
+        return False
+
+
+
+
+# ==================== BROADCAST USERS ====================
+
+
+
+
+
+
+
+
+# ==================== BROADCAST USERS ====================
+
+@Client.on_message(filters.command("bu") & filters.user(OWNER_ID))
 async def broadcast_users(client, msg):
     if not msg.reply_to_message:
-        return await msg.reply_text("❌ Reply to a message.")
+        return await msg.reply_text(
+            "❌ Please reply to a message to use /bu."
+        )
+
+    user_ids = list(get_all_user_ids())
+    print(f"[BU DEBUG] Total users: {len(user_ids)}")
+    print(f"[BU DEBUG] Sample IDs: {user_ids[:5]}")
 
     sent, failed = 0, 0
+    total = len(user_ids)
 
-    for user_id in get_all_user_ids():
-        try:
-            await msg.reply_to_message.forward(user_id)
-            sent += 1
-            await asyncio.sleep(0.05)
-        except:
-            failed += 1
-
-    await msg.reply_text(
-        f"""
-━━━━━━━━━━━━━━━━━━━
-📢 **ʙʀᴏᴀᴅᴄᴀsᴛ sᴛᴀᴛᴜs**
-
-👤 **sᴇɴᴛ:** `{sent}`
-❌ **ғᴀɪʟᴇᴅ:** `{failed}`
-
-🧠 **ᴛᴏᴛᴀʟ:** `{sent + failed}`
-━━━━━━━━━━━━━━━━━━━
-⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** [ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ]({TEAM_LINK})
-"""
+    status = await msg.reply_text(
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"📢 ᴜsᴇʀ ʙʀᴏᴀᴅᴄᴀsᴛ sᴛᴀʀᴛᴇᴅ\n\n"
+        f"👤 ᴛᴏᴛᴀʟ ᴜsᴇʀs: {total}\n"
+        f"━━━━━━━━━━━━━━━━━━━"
     )
 
-@Client.on_message(filters.command("broadcast_group") & filters.user(OWNER_ID))
+    for user_id in user_ids:
+        if await send_broadcast_message(
+            client, msg.reply_to_message, user_id
+        ):
+            sent += 1
+        else:
+            failed += 1
+
+        await asyncio.sleep(0.1)
+
+    await status.edit_text(
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"📢 ᴜsᴇʀ ʙʀᴏᴀᴅᴄᴀsᴛ sᴛᴀᴛᴜs\n\n"
+        f"👤 ᴜsᴇʀs sᴇɴᴛ: {sent}\n"
+        f"❌ ғᴀɪʟᴇᴅ / ʀᴇᴍᴏᴠᴇᴅ: {failed}\n\n"
+        f"🧠 ᴛᴏᴛᴀʟ: {total}\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** "
+        f"[ᴛᴇᴧᴍ ᴊᴧᴘᴧɴᴇsᴇ]({TEAM_LINK})"
+    )
+
+
+# ==================== BROADCAST GROUPS ====================
+
+@Client.on_message(filters.command("bg") & filters.user(OWNER_ID))
 async def broadcast_groups(client, msg):
     if not msg.reply_to_message:
-        return await msg.reply_text("❌ Reply to a message.")
+        return await msg.reply_text(
+            "❌ Please reply to a message to use /bg."
+        )
+
+    group_ids = list(get_all_group_ids())
+    print(f"[BG DEBUG] Total groups: {len(group_ids)}")
+    print(f"[BG DEBUG] Sample IDs: {group_ids[:5]}")
 
     sent, failed = 0, 0
+    total = len(group_ids)
 
-    for group_id in get_all_group_ids():
-        try:
-            await msg.reply_to_message.forward(group_id)
+    status = await msg.reply_text(
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"📢 ɢʀᴏᴜᴘ ʙʀᴏᴀᴅᴄᴀsᴛ sᴛᴀʀᴛᴇᴅ\n\n"
+        f"👥 ᴛᴏᴛᴀʟ ɢʀᴏᴜᴘs: {total}\n"
+        f"━━━━━━━━━━━━━━━━━━━"
+    )
+
+    for group_id in group_ids:
+        if await send_broadcast_message(
+            client, msg.reply_to_message, group_id
+        ):
             sent += 1
-            await asyncio.sleep(0.1)
-        except:
+        else:
             failed += 1
 
-    await msg.reply_text(
-    f"""
-━━━━━━━━━━━━━━━━━━━
-📢 **ɢʀᴏᴜᴘ ʙʀᴏᴀᴅᴄᴀsᴛ sᴛᴀᴛᴜs**
+        await asyncio.sleep(0.1)
 
-👥 **sᴇɴᴛ:** `{sent}`
-❌ **ғᴀɪʟᴇᴅ:** `{failed}`
-
-🧠 **ᴛᴏᴛᴀʟ:** `{sent + failed}`
-━━━━━━━━━━━━━━━━━━━
-⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** [ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ]({TEAM_LINK})
-"""
+    await status.edit_text(
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"📢 ɢʀᴏᴜᴘ ʙʀᴏᴀᴅᴄᴀsᴛ sᴛᴀᴛᴜs\n\n"
+        f"👥 ɢʀᴏᴜᴘs sᴇɴᴛ: {sent}\n"
+        f"❌ ғᴀɪʟᴇᴅ / ʀᴇᴍᴏᴠᴇᴅ: {failed}\n\n"
+        f"🧠 ᴛᴏᴛᴀʟ: {total}\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** "
+        f"[ᴛᴇᴧᴍ ᴊᴧᴘᴧɴᴇsᴇ]({TEAM_LINK})"
     )
 
 
-@Client.on_message(filters.command("broadcast_all") & filters.user(OWNER_ID))
+# ==================== BROADCAST ALL ====================
+
+@Client.on_message(filters.command("b") & filters.user(OWNER_ID))
 async def broadcast_all(client, msg):
     if not msg.reply_to_message:
-        return await msg.reply_text("❌ Reply to a message.")
+        return await msg.reply_text(
+            "❌ Please reply to a message to use /b."
+        )
+
+    user_ids = list(get_all_user_ids())
+    group_ids = list(get_all_group_ids())
+
+    print(
+        f"[B DEBUG] Users: {len(user_ids)} | "
+        f"Groups: {len(group_ids)}"
+    )
+    print(f"[B DEBUG] Sample users: {user_ids[:5]}")
+    print(f"[B DEBUG] Sample groups: {group_ids[:5]}")
 
     sent, failed = 0, 0
+    total = len(user_ids) + len(group_ids)
 
-    for user_id in get_all_user_ids():
-        try:
-            await msg.reply_to_message.forward(user_id)
-            sent += 1
-            await asyncio.sleep(0.05)
-        except:
-            failed += 1
-
-    for group_id in get_all_group_ids():
-        try:
-            await msg.reply_to_message.forward(group_id)
-            sent += 1
-            await asyncio.sleep(0.1)
-        except:
-            failed += 1
-
-    await msg.reply_text(
-    f"""
-━━━━━━━━━━━━━━━━━━━
-📢 **ʙʀᴏᴀᴅᴄᴀsᴛ ᴀʟʟ sᴛᴀᴛᴜs**
-
-👤 **ᴜsᴇʀs + ɢʀᴏᴜᴘs sᴇɴᴛ:** `{sent}`
-❌ **ғᴀɪʟᴇᴅ / ʀᴇᴍᴏᴠᴇᴅ:** `{failed}`
-
-🧠 **ᴛᴏᴛᴀʟ:** `{sent + failed}`
-━━━━━━━━━━━━━━━━━━━
-⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** [ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ]({TEAM_LINK})
-"""
+    status = await msg.reply_text(
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"📢 ʙʀᴏᴀᴅᴄᴀsᴛ ᴀʟʟ sᴛᴀʀᴛᴇᴅ\n\n"
+        f"👤 ᴜsᴇʀs: {len(user_ids)}\n"
+        f"👥 ɢʀᴏᴜᴘs: {len(group_ids)}\n"
+        f"🧠 ᴛᴏᴛᴀʟ: {total}\n"
+        f"━━━━━━━━━━━━━━━━━━━"
     )
+
+    for chat_id in user_ids + group_ids:
+        if await send_broadcast_message(
+            client, msg.reply_to_message, chat_id
+        ):
+            sent += 1
+        else:
+            failed += 1
+
+        await asyncio.sleep(0.1)
+
+    await status.edit_text(
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"📢 ʙʀᴏᴀᴅᴄᴀsᴛ ᴀʟʟ sᴛᴀᴛᴜs\n\n"
+        f"👤 ᴜsᴇʀs + ɢʀᴏᴜᴘs sᴇɴᴛ: {sent}\n"
+        f"❌ ғᴀɪʟᴇᴅ / ʀᴇᴍᴏᴠᴇᴅ: {failed}\n\n"
+        f"🧠 ᴛᴏᴛᴀʟ: {total}\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** "
+        f"[ᴛᴇᴧᴍ ᴊᴧᴘᴧɴᴇsᴇ]({TEAM_LINK})"
+    )
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -177,14 +272,14 @@ if not MONGO_URL:
     raise RuntimeError("MONGO_URL not set")
 
 mongo_client = MongoClient(MONGO_URL)
-db = mongo_client["JapaneseXRanking"]
+db = mongo_client["TeamJapanese"]
 
 users_col = db["users"]
 groups_col = db["groups"]
 
 # Active challenges (in-memory)
 active_challenges = {}
-CHALLENGE_DURATION = 60 #
+CHALLENGE_DURATION = 60 # 10 minutes per challenge
 
 # -------------------- GROUP REGISTER -------------------- #
 
@@ -212,12 +307,12 @@ async def on_bot_added(client: Client, message: Message):
 
 
 async def challenge_loop(client: Client):
-    await asyncio.sleep(10)  
+    await asyncio.sleep(10)  # bot start hone ke 10 sec baad
 
     while True:
         print("🎮 sending challenge...")
         await send_challenge(client)
-        await asyncio.sleep(CHALLENGE_INTERVAL)  # 15 min
+        await asyncio.sleep(CHALLENGE_INTERVAL)  # 30 min
 
 
 async def send_challenge(client: Client):
@@ -267,32 +362,7 @@ async def send_challenge(client: Client):
 
 
 
-@Client.on_message(filters.command("repo"))
-async def repo_handler(client: Client, message: Message):
-    repo_text = f"""
-━━━━━━━━━━━━━━━━━━━
-**[𝑱𝒂𝒑𝒂𝒏𝒆𝒔𝒆 𝑿 𝑹𝒂𝒏𝒌𝒊𝒏𝒈]({BOT_LINK})**
-**ʀᴇᴘᴏꜱɪᴛᴏʀʏ:** ᴏᴘᴇɴ-sᴏᴜʀᴄᴇ
-**ꜱᴛᴀᴛᴜꜱ:** ᴀᴄᴛɪᴠᴇʟʏ ᴍᴀɪɴᴛᴀɪɴᴇᴅ
-**ꜱᴄᴏᴘᴇ:** ᴘʀᴏᴅᴜᴄᴛɪᴏɴ-ʀᴇᴀᴅʏ ᴄᴏᴅᴇʙᴀꜱᴇ
-**ᴅᴏᴄᴜᴍᴇɴᴛᴀᴛɪᴏɴ:** ᴄʟᴇᴀʀ & ᴡᴇʟʟ sᴛʀᴜᴄᴛᴜʀᴇᴅ
-━━━━━━━━━━━━━━━━━━━
-**ᴍᴀɪɴᴛᴀɪɴᴇʀ:** [ᴛᴇᴧᴍ ᴊᴧᴘᴧɴᴇsᴇ]({TEAM_LINK})
-"""
 
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton(
-            "ᴠɪᴇᴡ ɢɪᴛʜᴜʙ ʀᴇᴘᴏꜱɪᴛᴏʀʏ",
-            url="https://github.com/TeamJapanese/Japanese-X-Ranking"
-        )]
-    ])
-
-    await message.reply_text(
-        repo_text,
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=buttons,
-        disable_web_page_preview=True
-    )
 
 
 
@@ -346,36 +416,75 @@ async def answer_handler(client: Client, message: Message):
 
 # -------------------- BOT COMMANDS -------------------- #
 
+
+# ==================== START COMMAND ====================
+
 @Client.on_message(filters.command("start"))
 async def start_cmd(client, message):
 
-    # --- Bot & User Mentions ---
-    bot_user = await client.get_me()
-    bot_mention = f"[{bot_user.first_name}](https://t.me/{bot_user.username})"
+    # ==================== USER REGISTRATION ====================
+
+    from Japanese.database import add_user
+
     user = message.from_user
+
+    if user:
+        try:
+            add_user(user.id, user.first_name)
+            print(f"[START DEBUG] User registered: {user.id}")
+        except Exception as e:
+            print(f"[START ERROR] User registration failed: {e}")
+
+    # ==================== BOT & USER MENTIONS ====================
+
+    bot_user = await client.get_me()
+    bot_username = bot_user.username or "username"
+
+    bot_mention = f"[{bot_user.first_name}](https://t.me/{bot_username})"
+
+    if not user:
+        return await message.reply_text(
+            "❌ Unable to identify your Telegram account."
+        )
+
     user_link = f"[{user.first_name}](tg://user?id={user.id})"
     username = f"@{user.username}" if user.username else "None"
 
-    # --- Time (IST) ---
+    # ==================== TIME (IST) ====================
+
     ist = pytz.timezone("Asia/Kolkata")
     current_time = datetime.now(ist).strftime("%d-%m-%Y | %I:%M:%S %p")
 
-    # --- MAIN START TEXT ---
+    # ==================== MAIN START TEXT ====================
+
     reply_text = (
         f"✨👋 **ᴡᴇʟᴄᴏᴍᴇ, {user_link}!** 👋✨\n\n"
-        f"🏆 **ɪ ᴀᴍ [{bot_user.first_name}](https://t.me/{bot_user.username})** — ᴀ ʀᴇᴀʟ-ᴛɪᴍᴇ ᴛʏᴘɪɴɢ & ʀᴀɴᴋɪɴɢ ʙᴏᴛ ⚡\n\n"
+        f"🏆 **ɪ ᴀᴍ {bot_mention}** — ᴀ ʀᴇᴀʟ-ᴛɪᴍᴇ ᴛʏᴘɪɴɢ & ʀᴀɴᴋɪɴɢ ʙᴏᴛ ⚡\n\n"
         "⌨️ ᴛʏᴘᴇ ғᴀsᴛ • ᴇᴀʀɴ ᴘᴏɪɴᴛs • ᴄʟɪᴍʙ ᴛʜᴇ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n"
         "⏱️ ᴀᴜᴛᴏᴍᴀᴛᴇᴅ ᴄʜᴀʟʟᴇɴɢᴇs ʀᴜɴ ʀᴇɢᴜʟᴀʀʟʏ ɪɴ ɢʀᴏᴜᴘs\n\n"
-        "🏷️ ᴏғғɪᴄɪᴀʟ ᴄʜᴀɴɴᴇʟ: [ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ](https://t.me/TeamJapaneseOfficial)"
+        "🏷️ ᴏғғɪᴄɪᴀʟ ᴄʜᴀɴɴᴇʟ: "
+        "[ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ](https://t.me/TeamJapaneseOfficial)"
     )
 
-    # --- BUTTONS FOR START MESSAGE ---
+    # ==================== START BUTTONS ====================
+
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/itz_sandeep_shrma")],
-        [InlineKeyboardButton("ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ", url="https://t.me/TeamJapaneseOfficial")]
+        [
+            InlineKeyboardButton(
+                "ᴅᴇᴠᴇʟᴏᴘᴇʀ",
+                url="https://t.me/sxndeep_shxrmx"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ",
+                url="https://t.me/TeamJapaneseOfficial"
+            )
+        ]
     ])
 
-    # --- SEND START MESSAGE WITH IMAGE ---
+    # ==================== SEND START MESSAGE ====================
+
     await message.reply_photo(
         photo="img/ranking.png",
         caption=reply_text,
@@ -383,34 +492,75 @@ async def start_cmd(client, message):
         reply_markup=buttons
     )
 
-    # ==========================
-    # ==========================
+    # ==================== USER LOG TEXT ====================
+
     log_text = (
-    f"🔔 **ɴᴇᴡ ᴜsᴇʀ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ!** 🔔\n\n"
-    f"👤 **ɴᴀᴍᴇ:** {user_link}\n"
-    f"🏷 **ᴜsᴇʀɴᴀᴍᴇ:** {username}\n"
-    f"🆔 **ᴜsᴇʀ ɪᴅ:** `{user.id}`\n"
-    f"🕒 **ᴛɪᴍᴇ (ɪsᴛ):** `{current_time}`\n"
-    f"🔗 **ᴘᴇʀᴍᴀɴᴇɴᴛ ʟɪɴᴋ:** [ᴛᴀᴘ ʜᴇʀᴇ](tg://user?id={user.id})\n\n"
-    f"⚡ **ᴀᴄᴛɪᴏɴ:** `/start` ᴇxᴇᴄᴜᴛᴇᴅ\n"
-    f"💬 **sᴛᴀᴛᴜs:** ᴜsᴇʀ ʜᴀs sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ 🚀\n"
-    f"⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** [ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ](https://t.me/TeamJapaneseOfficial)"
+        f"🔔 **ɴᴇᴡ ᴜsᴇʀ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ!** 🔔\n\n"
+        f"👤 **ɴᴀᴍᴇ:** {user_link}\n"
+        f"🏷 **ᴜsᴇʀɴᴀᴍᴇ:** {username}\n"
+        f"🆔 **ᴜsᴇʀ ɪᴅ:** `{user.id}`\n"
+        f"🕒 **ᴛɪᴍᴇ (ɪsᴛ):** `{current_time}`\n"
+        f"🔗 **ᴘᴇʀᴍᴀɴᴇɴᴛ ʟɪɴᴋ:** "
+        f"[ᴛᴀᴘ ʜᴇʀᴇ](tg://user?id={user.id})\n\n"
+        f"⚡ **ᴀᴄᴛɪᴏɴ:** `/start` ᴇxᴇᴄᴜᴛᴇᴅ\n"
+        f"💬 **sᴛᴀᴛᴜs:** ᴜsᴇʀ ʜᴀs sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ 🚀\n"
+        f"⚡ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ:** "
+        "[ᴛᴇᴀᴍ ᴊᴀᴘᴀɴᴇsᴇ](https://t.me/TeamJapaneseOfficial)"
     )
+
+    # ==================== LOG BUTTONS ====================
 
     log_buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("👤 ᴠɪᴇᴡ ᴘʀᴏꜰɪʟᴇ", url=f"tg://openmessage?user_id={user.id}")]
+        [
+            InlineKeyboardButton(
+                "👤 ᴠɪᴇᴡ ᴘʀᴏꜰɪʟᴇ",
+                url=f"tg://user?id={user.id}"
+            )
+        ]
     ])
 
-    # --- SEND LOG TO YOUR GROUP ---
-    await client.send_message(
-        chat_id=-1002519094633,   # << Your LOG_CHAT_ID
-        text=log_text,
+    # ==================== SEND LOG TO LOG GROUP ====================
+
+    try:
+        await client.send_message(
+            chat_id=-1002519094633,
+            text=log_text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=log_buttons,
+            disable_web_page_preview=True
+        )
+    except Exception as e:
+        print(f"[START LOG ERROR] Failed to send user log: {e}")
+
+
+
+
+@Client.on_message(filters.command("repo"))
+async def repo_handler(client: Client, message: Message):
+    repo_text = f"""
+━━━━━━━━━━━━━━━━━━━
+**[𝑱𝒂𝒑𝒂𝒏𝒆𝒔𝒆 𝑿 𝑹𝒂𝒏𝒌𝒊𝒏𝒈]({BOT_LINK})**
+**ʀᴇᴘᴏꜱɪᴛᴏʀʏ:** ᴏᴘᴇɴ-sᴏᴜʀᴄᴇ
+**ꜱᴛᴀᴛᴜꜱ:** ᴀᴄᴛɪᴠᴇʟʏ ᴍᴀɪɴᴛᴀɪɴᴇᴅ
+**ꜱᴄᴏᴘᴇ:** ᴘʀᴏᴅᴜᴄᴛɪᴏɴ-ʀᴇᴀᴅʏ ᴄᴏᴅᴇʙᴀꜱᴇ
+**ᴅᴏᴄᴜᴍᴇɴᴛᴀᴛɪᴏɴ:** ᴄʟᴇᴀʀ & ᴡᴇʟʟ sᴛʀᴜᴄᴛᴜʀᴇᴅ
+━━━━━━━━━━━━━━━━━━━
+**ᴍᴀɪɴᴛᴀɪɴᴇʀ:** [ᴛᴇᴧᴍ ᴊᴧᴘᴧɴᴇsᴇ]({TEAM_LINK})
+"""
+
+    buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton(
+            "ᴠɪᴇᴡ ɢɪᴛʜᴜʙ ʀᴇᴘᴏꜱɪᴛᴏʀʏ",
+            url="https://github.com/TeamJapanese/Japanese-X-Ranking"
+        )]
+    ])
+
+    await message.reply_text(
+        repo_text,
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=log_buttons,
+        reply_markup=buttons,
         disable_web_page_preview=True
     )
-
-
 
 
 
@@ -476,7 +626,7 @@ async def alive_cmd(client, message):
     )
 
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("⚡ ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/itz_sandeep_shrma")],
+        [InlineKeyboardButton("⚡ ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/sxndeep_shxrmx")],
         [InlineKeyboardButton("📢 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url="https://t.me/TeamJapaneseOfficial")]
     ])
 
@@ -512,7 +662,7 @@ async def ping_cmd(client, message):
     )
 
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("⚡ ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/itz_sandeep_shrma")],
+        [InlineKeyboardButton("⚡ ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/sxndeep_shxrmx")],
         [InlineKeyboardButton("📢 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url="https://t.me/TeamJapaneseOfficial")]
     ])
 
@@ -556,6 +706,9 @@ async def help_command(client: Client, message: Message):
 """,
         disable_web_page_preview=True
     )
+
+
+
 
 
 
